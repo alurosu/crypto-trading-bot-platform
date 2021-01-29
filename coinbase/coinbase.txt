@@ -1,0 +1,12 @@
+21:01:29 05:29:25 - Successfully verified event with id 00000000-0000-0000-0000-000000000000 and type charge:failed.
+21:01:29 05:29:25 - Could not set payment status
+21:01:29 05:29:47 - Successfully verified event with id 00000000-0000-0000-0000-000000000000 and type charge:confirmed.
+21:01:29 05:29:47 - Successfully set subscription: Unlimited and added: 1 months to user ID: 1
+21:01:29 05:35:16 - Successfully verified event with id d58956b4-573f-48ac-ace2-43d39eb1ad2f and type charge:created.
+21:01:29 05:35:16 - Could not set payment status
+21:01:29 05:36:57 - Successfully verified event with id 8dcedf2a-9585-46bb-a855-ee8b200b779f and type charge:failed.
+21:01:29 05:36:57 - Could not set payment status
+21:01:29 05:54:20 - Successfully verified event with id 01c573ab-e76f-49a7-920d-92ce57a0613c and type charge:created.
+21:01:29 05:54:20 - Could not set payment status
+21:01:29 05:54:25 - Successfully verified event with id 5310a7d0-0dfe-4652-b848-348aef82694e and type charge:failed.
+21:01:29 05:54:25 - Could not set payment status
