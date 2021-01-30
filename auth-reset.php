@@ -37,7 +37,6 @@ if(isset($_POST['submit'])){
             $result = mysqli_query($link, $sql);
 
             $subject = "Password Reset";
-            $body = "Hi, $username. Click here to reset your password ".$actual_link."/auth-reset-password.php?token=$token ";
 
             $body = '<html>
             <table class="body-wrap" style="font-family: \'Helvetica Neue\',Helvetica,Arial,sans-serif; box-sizing: border-box; font-size: 14px; width: 100%; background-color: #f8f8fb; margin: 0;">
@@ -87,7 +86,6 @@ if(isset($_POST['submit'])){
             </table>
             </html>';
             $body_nohtml = "Reset your password by copying the following link in your browser: https://pitmanbot.com/auth-reset-password.php?token=".$token." .If you did not request a password change, please ignore this email.";
-            $sender_email = "From: $SMTPuser";
 
             try {
                 // Server settings

@@ -1,13 +1,30 @@
 <?php
+ini_set('display_errors', 1);
+ini_set('display_startup_errors', 1);
+error_reporting(E_ALL);
 include 'layouts/head-main.php';
 
 // client 6LfwFEAaAAAAACkQPwBwAr-40egeneHcc8Yq2LGX
 define("RECAPTCHA_V3_SECRET_KEY", '6LfwFEAaAAAAAKdZFG3KHeI_H-oCdX9In8wK_5IC');
 
+// Include config file
+require_once "config.php";
+
+use PHPMailer\PHPMailer\PHPMailer;
+use PHPMailer\PHPMailer\SMTP;
+use PHPMailer\PHPMailer\Exception;
+
+require_once __DIR__ . '/vendor/phpmailer/src/Exception.php';
+require_once __DIR__ . '/vendor/phpmailer/src/PHPMailer.php';
+require_once __DIR__ . '/vendor/phpmailer/src/SMTP.php';
+
 // Define variables and initialize with empty values
 $name = $email = $message = "";
 $captcha_err = $name_err = $email_err = $message_err = "";
 $success = "";
+
+// passing true in constructor enables exceptions in PHPMailer
+$mail = new PHPMailer(true);
 
 // Processing form data when form is submitted
 if($_SERVER["REQUEST_METHOD"] == "POST"){
@@ -30,7 +47,7 @@ if($_SERVER["REQUEST_METHOD"] == "POST"){
     if(empty(trim($_POST["message"]))){
         $message_err = "Please type your message.";
     } else{
-        $message = trim($_POST["message"]);
+        $message = strip_tags($_POST["message"]);
     }
 
     $token = $_POST['token'];
@@ -53,8 +70,83 @@ if($_SERVER["REQUEST_METHOD"] == "POST"){
 
     // Validate credentials
     if(empty($name_err) && empty($email_err) && empty($message_err) && empty($captcha_err)) {
-        $success = "We received your message. Expect an answer in a few business days.";
-        $name = $email = $message = "";
+        $subject = "[Contact] Pitman Bot Inquiry from ".$name;
+
+        $body = '<html>
+        <table class="body-wrap" style="font-family: \'Helvetica Neue\',Helvetica,Arial,sans-serif; box-sizing: border-box; font-size: 14px; width: 100%; background-color: #f8f8fb; margin: 0;">
+            <tr style="font-family: \'Helvetica Neue\',Helvetica,Arial,sans-serif; box-sizing: border-box; font-size: 14px; margin: 0;">
+                <td style="font-family: \'Helvetica Neue\',Helvetica,Arial,sans-serif; box-sizing: border-box; font-size: 14px; vertical-align: top; margin: 0;" valign="top"></td>
+                <td class="container" width="600" style="font-family: \'Helvetica Neue\',Helvetica,Arial,sans-serif; box-sizing: border-box; font-size: 14px; vertical-align: top; display: block !important; max-width: 600px !important; clear: both !important; margin: 0 auto;" valign="top">
+                    <div class="content" style="font-family: \'Helvetica Neue\',Helvetica,Arial,sans-serif; box-sizing: border-box; font-size: 14px; max-width: 600px; display: block; margin: 0 auto; padding: 20px;">
+                        <table class="main" width="100%" cellpadding="0" cellspacing="0" itemprop="action" itemscope itemtype="http://schema.org/ConfirmAction" style="font-family: \'Helvetica Neue\',Helvetica,Arial,sans-serif; box-sizing: border-box; font-size: 14px; border-radius: 3px; margin: 0; border: none;">
+                            <tr style="font-family: \'Helvetica Neue\',Helvetica,Arial,sans-serif; box-sizing: border-box; font-size: 14px; margin: 0;">
+                                <td class="content-wrap" style="font-family: \'Helvetica Neue\',Helvetica,Arial,sans-serif; box-sizing: border-box; color: #495057; font-size: 14px; vertical-align: top; margin: 0;padding: 30px; box-shadow: 0 0.75rem 1.5rem rgba(18,38,63,.03); ;border-radius: 7px; background-color: #fff;" valign="top">
+                                    <meta itemprop="name" content="Confirm Email" style="font-family: \'Helvetica Neue\',Helvetica,Arial,sans-serif; box-sizing: border-box; font-size: 14px; margin: 0;" />
+                                    <table width="100%" cellpadding="0" cellspacing="0" style="font-family: \'Helvetica Neue\',Helvetica,Arial,sans-serif; box-sizing: border-box; font-size: 14px; margin: 0;">
+                                        <tr style="font-family: \'Helvetica Neue\',Helvetica,Arial,sans-serif; box-sizing: border-box; font-size: 14px; margin: 0;">
+                                            <td class="content-block" style="font-family: \'Helvetica Neue\',Helvetica,Arial,sans-serif; box-sizing: border-box; font-size: 14px; vertical-align: top; margin: 0; padding: 0 0 20px;" valign="top">
+                                                '.nl2br($message).'
+                                            </td>
+                                        </tr>
+
+                                        <tr style="font-family: \'Helvetica Neue\',Helvetica,Arial,sans-serif; box-sizing: border-box; font-size: 14px; margin: 0;">
+                                            <td class="content-block" style="font-family: \'Helvetica Neue\',Helvetica,Arial,sans-serif; box-sizing: border-box; font-size: 14px; vertical-align: top; margin: 0; padding: 0 0 20px;" valign="top">
+                                                <b>'.$name.'</b>
+                                                <p>&lt;'.$email.'&gt;</p>
+                                            </td>
+                                        </tr>
+
+                                        <tr style="font-family: \'Helvetica Neue\',Helvetica,Arial,sans-serif; box-sizing: border-box; font-size: 14px; margin: 0;">
+                                            <td class="content-block" style="text-align: center;font-family: \'Helvetica Neue\',Helvetica,Arial,sans-serif; box-sizing: border-box; font-size: 14px; vertical-align: top; margin: 0; padding: 0;" valign="top">
+                                                © '.date('Y', time()).' Pitman Bot
+                                            </td>
+                                        </tr>
+                                    </table>
+                                </td>
+                            </tr>
+                        </table>
+                    </div>
+                </td>
+            </tr>
+        </table>
+        </html>';
+        $body_nohtml = $message.' - from '.$name.' <'.$email.'>';
+
+        try {
+            // Server settings
+            // $mail->SMTPDebug = SMTP::DEBUG_SERVER; // for detailed debug output
+            $mail->isSMTP();
+            $mail->Host = $SMTPserver;
+            $mail->SMTPAuth = true;
+            $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
+            //$mail->SMTPSecure = false;
+            //$mail->SMTPAutoTLS = false;
+            $mail->Port = $SMTPport;
+
+            $mail->Username = $SMTPuser;
+            $mail->Password = $SMTPpass;
+
+            // Sender and recipient settings
+            $mail->setFrom($SMTPuser, $SMTPname);
+            $mail->addAddress('alurosu@gmail.com', 'alurosu');
+            $mail->addAddress('gabitza.sas@gmail.com', 'Gabriel Sas');
+            $mail->addReplyTo($email, $name); // to set the reply to
+
+            // Setting the email content
+            $mail->IsHTML(true);
+            $mail->Subject = $subject;
+            $mail->Body = $body;
+            $mail->AltBody = $body_nohtml;
+
+            $mail->send();
+            // echo "We have emailed your password reset link!";
+            $success = "We received your message. Expect an answer in a few business days.";
+            $name = $email = $message = "";
+
+        } catch (Exception $e) {
+            $email_err = "Error in sending email. Mailer Error: {$mail->ErrorInfo}";
+        }
+
     }
 
     // Close connection

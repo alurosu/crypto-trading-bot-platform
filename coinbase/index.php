@@ -37,7 +37,7 @@ try {
                 elseif ($subscription == "Enterprise")
                     $max_bots = 100;
 
-                $sql = "UPDATE `users` SET `subscription_name` = '".$subscription."', `subscription_end_timestamp` = `subscription_end_timestamp`+".$time.", `max_bots` = '".$max_bots."' WHERE `id` = ".$user_id;
+                $sql = "UPDATE `users` SET `subscription_name` = '".$subscription."', `subscription_end_timestamp` = `subscription_end_timestamp`+".$time.", subscription_end_is_notified = 0, `max_bots` = '".$max_bots."' WHERE `id` = ".$user_id;
                 if (mysqli_query($link, $sql) === TRUE)
                     file_put_contents('coinbase.txt',$date.'Successfully set subscription: '.$subscription.' and added: '.$row['time'].' months to user ID: '.$user_id.PHP_EOL, FILE_APPEND);
                 else file_put_contents('coinbase.txt',$date.'Could not update the subscription to user ID:'.$user_id.PHP_EOL, FILE_APPEND);
